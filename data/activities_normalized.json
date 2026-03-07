@@ -1129,5 +1129,18 @@
     "start_date_local": "2026-03-06T17:30:48",
     "type": "Walk",
     "year": 2026
+  },
+  {
+    "date": "2026-03-07",
+    "distance": 21613.650390625,
+    "elevation_gain": 217.1199999973178,
+    "id": "22095549345",
+    "moving_time": 17793.0,
+    "name": "Chisinau Walking",
+    "raw_activity_type": "walking",
+    "raw_type": "walking",
+    "start_date_local": "2026-03-07T11:08:18",
+    "type": "Walk",
+    "year": 2026
   }
 ]
