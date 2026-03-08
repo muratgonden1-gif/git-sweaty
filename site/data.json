@@ -791,6 +791,15 @@
       "type": "Walk",
       "url": "https://connect.garmin.com/modern/activity/22095549345",
       "year": 2026
+    },
+    {
+      "date": "2026-03-08",
+      "hour": 8,
+      "name": "Chisinau Walking",
+      "subtype": "walking",
+      "type": "Walk",
+      "url": "https://connect.garmin.com/modern/activity/22103391350",
+      "year": 2026
     }
   ],
   "aggregates": {
@@ -1431,6 +1440,15 @@
           "distance": 21613.650390625,
           "elevation_gain": 217.1199999973178,
           "moving_time": 17793.0
+        },
+        "2026-03-08": {
+          "activity_ids": [
+            "22103391350"
+          ],
+          "count": 1,
+          "distance": 14077.7197265625,
+          "elevation_gain": 179.60000002384186,
+          "moving_time": 12163.0
         }
       },
       "resort_skiing": {
@@ -1504,7 +1522,7 @@
     }
   },
   "garmin_profile_url": "https://connect.garmin.com/modern/profile/ac65a509-aed0-45a9-ae6d-a9c6b35aa092",
-  "generated_at": "2026-03-07T22:10:31.912710+00:00",
+  "generated_at": "2026-03-08T15:48:02.490011+00:00",
   "other_bucket": "OtherSports",
   "profile_url": "https://connect.garmin.com/modern/profile/ac65a509-aed0-45a9-ae6d-a9c6b35aa092",
   "repo": "muratgonden1-gif/git-sweaty",
