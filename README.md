@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./site/git-sweaty-logo.svg" alt="git-sweaty-logo" />
+</p>
+
 # Workout --> Interactive Dashboard
 
 Turn your Strava and Garmin activities into GitHub-style contribution graphs. Automatically generate a free, interactive dashboard updated daily on GitHub Pages.  
