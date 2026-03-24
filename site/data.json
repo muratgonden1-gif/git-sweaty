@@ -12527,6 +12527,15 @@
       "type": "TrailRun",
       "url": "https://www.strava.com/activities/17826851288",
       "year": 2026
+    },
+    {
+      "date": "2026-03-24",
+      "hour": 7,
+      "name": "Morning Ride",
+      "subtype": "Ride",
+      "type": "Ride",
+      "url": "https://www.strava.com/activities/17839150458",
+      "year": 2026
     }
   ],
   "aggregates": {
@@ -24635,6 +24644,15 @@
           "distance": 0.0,
           "elevation_gain": 0.0,
           "moving_time": 2995.0
+        },
+        "2026-03-24": {
+          "activity_ids": [
+            "17839150458"
+          ],
+          "count": 1,
+          "distance": 0.0,
+          "elevation_gain": 0.0,
+          "moving_time": 1949.0
         }
       },
       "Run": {
@@ -25079,7 +25097,7 @@
       }
     }
   },
-  "generated_at": "2026-03-23T15:25:02.984917+00:00",
+  "generated_at": "2026-03-24T15:27:53.300321+00:00",
   "other_bucket": "OtherSports",
   "profile_url": "https://www.strava.com/athletes/31002690",
   "repo": "aspain/git-sweaty",
