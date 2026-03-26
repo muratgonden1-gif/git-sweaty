@@ -21,6 +21,33 @@ def _completed_process(returncode: int, stdout: str = "", stderr: str = "") -> s
 
 
 class SetupAuthPreflightTests(unittest.TestCase):
+    def test_run_prefers_bootstrap_resolved_gh_path(self) -> None:
+        with (
+            mock.patch.dict(os.environ, {"GIT_SWEATY_BOOTSTRAP_GH_PATH": r"C:\tools\gh.cmd"}, clear=False),
+            mock.patch("setup_auth.os.path.exists", return_value=True),
+            mock.patch("setup_auth.subprocess.run", return_value=_completed_process(returncode=0)) as run_mock,
+        ):
+            setup_auth._run(["gh", "auth", "status"], check=False)
+
+        run_mock.assert_called_once_with(
+            [r"C:\tools\gh.cmd", "auth", "status"],
+            input=None,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+    def test_assert_gh_ready_accepts_bootstrap_resolved_gh_path(self) -> None:
+        with (
+            mock.patch.dict(os.environ, {"GIT_SWEATY_BOOTSTRAP_GH_PATH": r"C:\tools\gh.cmd"}, clear=False),
+            mock.patch("setup_auth.os.path.exists", return_value=True),
+            mock.patch("setup_auth.shutil.which", return_value=None),
+            mock.patch("setup_auth._run", return_value=_completed_process(returncode=0)) as run_mock,
+        ):
+            setup_auth._assert_gh_ready()
+
+        run_mock.assert_called_once_with(["gh", "auth", "status"], check=False)
+
     def test_extract_gh_token_scopes_parses_status_output(self) -> None:
         output = """
         Logged in to github.com account user

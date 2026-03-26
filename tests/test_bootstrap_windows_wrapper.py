@@ -100,10 +100,26 @@ class BootstrapWindowsWrapperTests(unittest.TestCase):
     def test_windows_wrapper_preserves_explicit_repo_and_other_setup_args(self) -> None:
         wrapper = self._read_wrapper()
 
-        self.assertIn('Get-SetupArgValue -Args $Args -Name "--repo"', wrapper)
-        self.assertIn('if ([string]::IsNullOrWhiteSpace((Get-SetupArgValue -Args $Args -Name "--repo")))', wrapper)
+        self.assertIn('[string[]]$SetupArgs', wrapper)
+        self.assertIn('if ($null -eq $SetupArgs -or $SetupArgs.Count -eq 0)', wrapper)
+        self.assertIn('Get-SetupArgValue -SetupArgs $SetupArgs -Name "--repo"', wrapper)
+        self.assertIn('if ([string]::IsNullOrWhiteSpace((Get-SetupArgValue -SetupArgs $SetupArgs -Name "--repo")))', wrapper)
         self.assertIn('$pythonArgs += @("--repo", $TargetRepo)', wrapper)
-        self.assertIn('$pythonArgs += $Args', wrapper)
+        self.assertIn('if ($null -ne $SetupArgs -and $SetupArgs.Count -gt 0)', wrapper)
+        self.assertIn('$pythonArgs += $SetupArgs', wrapper)
+
+    def test_windows_wrapper_adds_resolved_gh_directory_to_path_before_python_handoff(self) -> None:
+        wrapper = self._read_wrapper()
+
+        self.assertIn('$env:GIT_SWEATY_BOOTSTRAP_GH_PATH = $GhPath', wrapper)
+        self.assertIn('Start-Process -FilePath $PythonRuntime.Command', wrapper)
+        self.assertIn('-ArgumentList $pythonArgs', wrapper)
+        self.assertIn('-Wait', wrapper)
+        self.assertIn('-PassThru', wrapper)
+        self.assertIn('return $process.ExitCode', wrapper)
+        self.assertIn('Split-Path -Path $GhPath -Parent', wrapper)
+        self.assertIn('$pathEntries = @($env:Path -split ";"', wrapper)
+        self.assertIn('$env:Path = "$ghDir;$env:Path"', wrapper)
 
     def test_windows_wrapper_executes_native_flow_in_expected_order(self) -> None:
         wrapper = self._read_wrapper()

@@ -164,6 +164,7 @@ def _run(
     check: bool = True,
     input_text: Optional[str] = None,
 ) -> subprocess.CompletedProcess[str]:
+    cmd = _normalize_cmd(cmd)
     return subprocess.run(
         cmd,
         input=input_text,
@@ -174,6 +175,7 @@ def _run(
 
 
 def _run_stream(cmd: list[str], *, cwd: Optional[str] = None) -> None:
+    cmd = _normalize_cmd(cmd)
     subprocess.run(cmd, check=True, cwd=cwd)
 
 
@@ -198,6 +200,32 @@ def _is_transient_gh_failure(stderr: str) -> bool:
         "connection refused",
     ]
     return any(token in text for token in transient_tokens)
+
+
+def _bootstrap_gh_path() -> Optional[str]:
+    path = os.environ.get("GIT_SWEATY_BOOTSTRAP_GH_PATH", "").strip()
+    if not path:
+        return None
+    if os.path.exists(path):
+        return path
+    return None
+
+
+def _resolved_gh_path() -> Optional[str]:
+    bootstrap_path = _bootstrap_gh_path()
+    if bootstrap_path:
+        return bootstrap_path
+    return shutil.which("gh")
+
+
+def _normalize_cmd(cmd: list[str]) -> list[str]:
+    if not cmd or cmd[0] != "gh":
+        return cmd
+
+    gh_path = _resolved_gh_path()
+    if not gh_path:
+        return cmd
+    return [gh_path, *cmd[1:]]
 
 
 def _isatty() -> bool:
@@ -260,7 +288,7 @@ def _prompt_secret_masked(prompt: str) -> str:
 
 
 def _assert_gh_ready() -> None:
-    if shutil.which("gh") is None:
+    if _resolved_gh_path() is None:
         raise RuntimeError(
             "GitHub CLI (`gh`) is required. Re-run via `scripts/bootstrap.sh` for guided install/auth, "
             "or install it from https://cli.github.com/ and run `gh auth login`."
@@ -2412,7 +2440,7 @@ def _try_dispatch_pages(repo: str) -> Tuple[bool, str]:
 def _watch_run(repo: str, run_id: int) -> Tuple[bool, str]:
     print(f"\nWatching workflow run {run_id}...")
     watch = subprocess.run(
-        ["gh", "run", "watch", str(run_id), "--repo", repo, "--exit-status"],
+        _normalize_cmd(["gh", "run", "watch", str(run_id), "--repo", repo, "--exit-status"]),
         check=False,
     )
     if watch.returncode == 0:
