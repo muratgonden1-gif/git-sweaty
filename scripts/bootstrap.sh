@@ -550,7 +550,8 @@ ensure_fork_exists() {
   fork_repo="${login}/${fork_name}"
   info "Creating fork repository: $fork_repo"
 
-  fork_cmd=(gh repo fork "$upstream_repo" --clone=false --remote=false)
+  # Omit explicit false boolean flags for broad gh CLI compatibility.
+  fork_cmd=(gh repo fork "$upstream_repo")
   if [[ "$fork_name" != "$default_fork_name" ]]; then
     fork_cmd+=(--fork-name "$fork_name")
   fi

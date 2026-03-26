@@ -900,10 +900,9 @@ exit 0
 
             with open(gh_log, "r", encoding="utf-8") as f:
                 gh_calls = f.read()
-            self.assertIn(
-                "repo fork aspain/git-sweaty --clone=false --remote=false --fork-name sweaty-online",
-                gh_calls,
-            )
+            self.assertIn("repo fork aspain/git-sweaty --fork-name sweaty-online", gh_calls)
+            self.assertNotIn("--remote=false", gh_calls)
+            self.assertNotIn("--clone=false", gh_calls)
             self.assertIn("repo view tester/sweaty-online", gh_calls)
 
             with open(curl_log, "r", encoding="utf-8") as f:

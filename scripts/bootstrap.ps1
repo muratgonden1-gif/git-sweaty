@@ -551,7 +551,8 @@ function Resolve-TargetRepository {
     }
 
     Write-Info "Creating your fork of $UpstreamRepo..."
-    & $GhPath repo fork $UpstreamRepo --clone=false --remote=false
+    # Omit explicit false boolean flags for broad gh CLI compatibility.
+    & $GhPath repo fork $UpstreamRepo
     if ($LASTEXITCODE -ne 0) {
         $existingFork = Get-ExistingForkRepo -GhPath $GhPath -Login $login -UpstreamRepo $UpstreamRepo
         if (-not [string]::IsNullOrWhiteSpace($existingFork)) {

@@ -92,7 +92,9 @@ class BootstrapWindowsWrapperTests(unittest.TestCase):
         self.assertIn('repos/$UpstreamRepo/forks?per_page=100', wrapper)
         self.assertIn('Invoke-GhJson $GhPath @("repo", "list", $Login, "--fork", "--limit", "1000", "--json", "nameWithOwner,parent")', wrapper)
         self.assertIn('Write-Info "Using existing fork: $existingFork"', wrapper)
-        self.assertIn('& $GhPath repo fork $UpstreamRepo --clone=false --remote=false', wrapper)
+        self.assertIn('& $GhPath repo fork $UpstreamRepo', wrapper)
+        self.assertNotIn('--remote=false', wrapper)
+        self.assertNotIn('--clone=false', wrapper)
         self.assertIn('Fail "Unable to create or locate a fork for $UpstreamRepo under $login."', wrapper)
 
     def test_windows_wrapper_preserves_explicit_repo_and_other_setup_args(self) -> None:
