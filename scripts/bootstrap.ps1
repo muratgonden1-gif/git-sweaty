@@ -373,15 +373,19 @@ function Ensure-GhAuthenticated {
 
 function Get-SetupArgValue {
     param(
-        [string[]]$Args,
+        [string[]]$SetupArgs,
         [string]$Name
     )
 
-    for ($i = 0; $i -lt $Args.Count; $i++) {
-        $item = $Args[$i]
+    if ($null -eq $SetupArgs -or $SetupArgs.Count -eq 0) {
+        return $null
+    }
+
+    for ($i = 0; $i -lt $SetupArgs.Count; $i++) {
+        $item = $SetupArgs[$i]
         if ($item -eq $Name) {
-            if ($i + 1 -lt $Args.Count) {
-                return $Args[$i + 1]
+            if ($i + 1 -lt $SetupArgs.Count) {
+                return $SetupArgs[$i + 1]
             }
             return $null
         }
@@ -526,10 +530,10 @@ function Resolve-TargetRepository {
     param(
         [string]$GhPath,
         [string]$UpstreamRepo,
-        [string[]]$Args
+        [string[]]$SetupArgs
     )
 
-    $explicitRepo = Get-SetupArgValue -Args $Args -Name "--repo"
+    $explicitRepo = Get-SetupArgValue -SetupArgs $SetupArgs -Name "--repo"
     if (-not [string]::IsNullOrWhiteSpace($explicitRepo)) {
         Ensure-RepoAccess $GhPath $explicitRepo
         return $explicitRepo
@@ -596,7 +600,7 @@ function Invoke-OnlineSetup {
         $PythonRuntime,
         [string]$UpstreamRepo,
         [string]$TargetRepo,
-        [string[]]$Args
+        [string[]]$SetupArgs
     )
 
     $archiveUrl = $env:GIT_SWEATY_BOOTSTRAP_ARCHIVE_URL
@@ -625,14 +629,40 @@ function Invoke-OnlineSetup {
 
         Write-Info ""
         Write-Info "Launching online setup..."
+        $env:GIT_SWEATY_BOOTSTRAP_GH_PATH = $GhPath
+        $ghDir = Split-Path -Path $GhPath -Parent
+        if (-not [string]::IsNullOrWhiteSpace($ghDir)) {
+            $pathEntries = @($env:Path -split ";" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+            $ghDirNormalized = $ghDir.TrimEnd("\")
+            $ghOnPath = $false
+            foreach ($entry in $pathEntries) {
+                if ($entry.TrimEnd("\") -ieq $ghDirNormalized) {
+                    $ghOnPath = $true
+                    break
+                }
+            }
+            if (-not $ghOnPath) {
+                $env:Path = "$ghDir;$env:Path"
+            }
+        }
         $pythonArgs = @() + $PythonRuntime.BaseArgs + @($setupScript)
-        if ([string]::IsNullOrWhiteSpace((Get-SetupArgValue -Args $Args -Name "--repo"))) {
+        if ([string]::IsNullOrWhiteSpace((Get-SetupArgValue -SetupArgs $SetupArgs -Name "--repo"))) {
             $pythonArgs += @("--repo", $TargetRepo)
         }
-        $pythonArgs += $Args
+        if ($null -ne $SetupArgs -and $SetupArgs.Count -gt 0) {
+            $pythonArgs += $SetupArgs
+        }
 
-        & $PythonRuntime.Command @pythonArgs
-        return $LASTEXITCODE
+        Push-Location $sourceRoot.FullName
+        try {
+            & $PythonRuntime.Command @pythonArgs
+            if ($null -ne $LASTEXITCODE) {
+                return [int]$LASTEXITCODE
+            }
+            return 0
+        } finally {
+            Pop-Location
+        }
     } finally {
         Remove-Item -Path $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
@@ -644,7 +674,7 @@ try {
     $pythonRuntime = Ensure-PythonRuntime
     $ghPath = Ensure-GhPath
     Ensure-GhAuthenticated $ghPath
-    $targetRepo = Resolve-TargetRepository -GhPath $ghPath -UpstreamRepo $UpstreamRepo -Args $SetupArgs
+    $targetRepo = Resolve-TargetRepository -GhPath $ghPath -UpstreamRepo $UpstreamRepo -SetupArgs $SetupArgs
 
     Write-Info ""
     Write-Info "Setup summary:"
@@ -655,7 +685,7 @@ try {
         exit 0
     }
 
-    $status = Invoke-OnlineSetup -GhPath $ghPath -PythonRuntime $pythonRuntime -UpstreamRepo $UpstreamRepo -TargetRepo $targetRepo -Args $SetupArgs
+    $status = Invoke-OnlineSetup -GhPath $ghPath -PythonRuntime $pythonRuntime -UpstreamRepo $UpstreamRepo -TargetRepo $targetRepo -SetupArgs $SetupArgs
     exit $status
 } catch {
     $message = if ($null -ne $_ -and $null -ne $_.Exception -and -not [string]::IsNullOrWhiteSpace($_.Exception.Message)) {
