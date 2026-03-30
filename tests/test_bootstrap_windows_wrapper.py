@@ -112,14 +112,26 @@ class BootstrapWindowsWrapperTests(unittest.TestCase):
         wrapper = self._read_wrapper()
 
         self.assertIn('$env:GIT_SWEATY_BOOTSTRAP_GH_PATH = $GhPath', wrapper)
-        self.assertIn('Push-Location $sourceRoot.FullName', wrapper)
-        self.assertIn('& $PythonRuntime.Command @pythonArgs', wrapper)
-        self.assertIn('if ($null -ne $LASTEXITCODE)', wrapper)
-        self.assertIn('return [int]$LASTEXITCODE', wrapper)
-        self.assertIn('Pop-Location', wrapper)
+        self.assertIn('$pythonProcess = Start-Process', wrapper)
+        self.assertIn('-FilePath $PythonRuntime.Command', wrapper)
+        self.assertIn('-ArgumentList $pythonArgs', wrapper)
+        self.assertIn('-WorkingDirectory $sourceRoot.FullName', wrapper)
+        self.assertIn('-NoNewWindow', wrapper)
+        self.assertIn('-Wait', wrapper)
+        self.assertIn('-PassThru', wrapper)
+        self.assertIn('$pythonProcess.ExitCode', wrapper)
+        self.assertIn('return [int]$pythonProcess.ExitCode', wrapper)
         self.assertIn('Split-Path -Path $GhPath -Parent', wrapper)
         self.assertIn('$pathEntries = @($env:Path -split ";"', wrapper)
         self.assertIn('$env:Path = "$ghDir;$env:Path"', wrapper)
+
+    def test_windows_wrapper_uses_start_process_for_python_when_started_from_powershell_one_liners(self) -> None:
+        wrapper = self._read_wrapper()
+
+        self.assertIn("direct native-process invocation can", wrapper)
+        self.assertIn("inherit pipeline stdin instead of the console host", wrapper)
+        self.assertIn("Start-Process keeps setup interactive.", wrapper)
+        self.assertNotIn('& $PythonRuntime.Command @pythonArgs', wrapper)
 
     def test_windows_wrapper_executes_native_flow_in_expected_order(self) -> None:
         wrapper = self._read_wrapper()

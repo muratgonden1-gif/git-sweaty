@@ -653,16 +653,19 @@ function Invoke-OnlineSetup {
             $pythonArgs += $SetupArgs
         }
 
-        Push-Location $sourceRoot.FullName
-        try {
-            & $PythonRuntime.Command @pythonArgs
-            if ($null -ne $LASTEXITCODE) {
-                return [int]$LASTEXITCODE
-            }
-            return 0
-        } finally {
-            Pop-Location
+        # When this wrapper is launched via `irm ... | iex`, direct native-process invocation can
+        # inherit pipeline stdin instead of the console host. Start-Process keeps setup interactive.
+        $pythonProcess = Start-Process `
+            -FilePath $PythonRuntime.Command `
+            -ArgumentList $pythonArgs `
+            -WorkingDirectory $sourceRoot.FullName `
+            -NoNewWindow `
+            -Wait `
+            -PassThru
+        if ($null -ne $pythonProcess -and $null -ne $pythonProcess.ExitCode) {
+            return [int]$pythonProcess.ExitCode
         }
+        return 0
     } finally {
         Remove-Item -Path $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
