@@ -1415,5 +1415,18 @@
     "start_date_local": "2026-03-25T19:23:58",
     "type": "Walk",
     "year": 2026
+  },
+  {
+    "date": "2026-03-26",
+    "distance": 4835.39013671875,
+    "elevation_gain": 143.12999999523163,
+    "id": "22307944724",
+    "moving_time": 1066.0,
+    "name": "Esenler Walking",
+    "raw_activity_type": "walking",
+    "raw_type": "walking",
+    "start_date_local": "2026-03-26T17:48:04",
+    "type": "Walk",
+    "year": 2026
   }
 ]
