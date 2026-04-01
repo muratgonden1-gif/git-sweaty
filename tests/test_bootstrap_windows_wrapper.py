@@ -37,8 +37,16 @@ class BootstrapWindowsWrapperTests(unittest.TestCase):
         wrapper = self._read_wrapper()
 
         self.assertIn("$MyInvocation.UnboundArguments", wrapper)
-        self.assertIn("$args.Count -gt 0", wrapper)
+        self.assertIn("Get-Variable -Name args -ErrorAction SilentlyContinue", wrapper)
+        self.assertIn("$topLevelArgs.Count -gt 0", wrapper)
         self.assertIn('$SetupArgs = @($MyInvocation.UnboundArguments | ForEach-Object { [string]$_ })', wrapper)
+        self.assertIn('$SetupArgs = $topLevelArgs', wrapper)
+
+    def test_windows_wrapper_does_not_reference_unbound_args_directly_under_strict_mode(self) -> None:
+        wrapper = self._read_wrapper()
+
+        self.assertNotIn("$args.Count -gt 0", wrapper)
+        self.assertNotIn('$SetupArgs = @($args | ForEach-Object { [string]$_ })', wrapper)
 
     def test_windows_wrapper_handles_missing_assume_yes_env_without_null_method_call(self) -> None:
         wrapper = self._read_wrapper()
@@ -148,12 +156,22 @@ class BootstrapWindowsWrapperTests(unittest.TestCase):
         gh_index = wrapper.index("$ghPath = Ensure-GhPath")
         auth_index = wrapper.index("Ensure-GhAuthenticated $ghPath")
         target_index = wrapper.index("$targetRepo = Resolve-TargetRepository")
+        continue_index = wrapper.index('Write-Info "Continuing with setup..."')
         launch_index = wrapper.index("$status = Invoke-OnlineSetup")
 
         self.assertLess(python_index, gh_index)
         self.assertLess(gh_index, auth_index)
         self.assertLess(auth_index, target_index)
+        self.assertLess(target_index, continue_index)
+        self.assertLess(continue_index, launch_index)
         self.assertLess(target_index, launch_index)
+
+    def test_windows_wrapper_does_not_pause_for_a_second_confirmation_prompt(self) -> None:
+        wrapper = self._read_wrapper()
+
+        self.assertIn('Write-Info "Continuing with setup..."', wrapper)
+        self.assertNotIn('Read-YesNo "Proceed?" "Y"', wrapper)
+        self.assertNotIn('Write-Info "Skipped setup."', wrapper)
 
     def test_readme_points_windows_quick_start_to_powershell_wrapper(self) -> None:
         with open(README_PATH, "r", encoding="utf-8") as f:

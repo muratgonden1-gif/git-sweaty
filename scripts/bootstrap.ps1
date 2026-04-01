@@ -6,10 +6,16 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+$topLevelArgs = @()
+$topLevelArgsVar = Get-Variable -Name args -ErrorAction SilentlyContinue
+if ($null -ne $topLevelArgsVar -and $null -ne $topLevelArgsVar.Value -and $topLevelArgsVar.Value.Count -gt 0) {
+    $topLevelArgs = @($topLevelArgsVar.Value | ForEach-Object { [string]$_ })
+}
+
 if (($null -eq $SetupArgs -or $SetupArgs.Count -eq 0) -and $null -ne $MyInvocation.UnboundArguments -and $MyInvocation.UnboundArguments.Count -gt 0) {
     $SetupArgs = @($MyInvocation.UnboundArguments | ForEach-Object { [string]$_ })
-} elseif (($null -eq $SetupArgs -or $SetupArgs.Count -eq 0) -and $args.Count -gt 0) {
-    $SetupArgs = @($args | ForEach-Object { [string]$_ })
+} elseif (($null -eq $SetupArgs -or $SetupArgs.Count -eq 0) -and $topLevelArgs.Count -gt 0) {
+    $SetupArgs = $topLevelArgs
 }
 
 $UpstreamRepo = if ([string]::IsNullOrWhiteSpace($env:GIT_SWEATY_UPSTREAM_REPO)) {
@@ -737,10 +743,7 @@ try {
     Write-Info "Setup summary:"
     Write-Info "- Mode: Recommended (Online-only)"
     Write-Info "- Target repository: $targetRepo"
-    if (-not (Read-YesNo "Proceed?" "Y")) {
-        Write-Info "Skipped setup."
-        exit 0
-    }
+    Write-Info "Continuing with setup..."
 
     $status = Invoke-OnlineSetup -GhPath $ghPath -PythonRuntime $pythonRuntime -UpstreamRepo $UpstreamRepo -TargetRepo $targetRepo -SetupArgs $SetupArgs
     exit $status
